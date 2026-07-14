@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ramon Neto | Medicina por propósito, Digital por liberdade</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-base: #0A0A0B;
+      --bg-surface: #141416;
+      --text-main: #F5F2EC;
+      --text-sec: #9C978F;
+      --accent: #C9A96A;
+      --accent-soft: #E5D2A6;
+      --line: rgba(245, 242, 236, 0.08);
+      --error: #b55353;
+      --font-display: 'Bricolage Grotesque', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { overflow-x: hidden; }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      position: relative;
+      line-height: 1.6;
+      font-size: 16px;
+      width: 100%;
+      /* estabiliza o texto no zoom, evita reflow/pulo */
+      text-size-adjust: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* ===== Fundo ambiente ===== */
+    .ambient-bg {
+      position: fixed; inset: 0;
+      z-index: -1; overflow: hidden; pointer-events: none;
+      background-color: var(--bg-base);
+    }
+    .ambient-orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); opacity: 0.2;
+      animation: floatOrb 30s infinite alternate ease-in-out;
+    }
+    .orb-1 { width: 45vw; height: 45vw; background: var(--accent); top: -12%; left: -12%; opacity: 0.12; }
+    .orb-2 { width: 60vw; height: 60vw; background: #1e1e24; bottom: -20%; right: -12%; animation-duration: 40s; animation-delay: -12s; }
+    @media (max-width: 767px) { .ambient-orb { filter: blur(60px); } }
+    @keyframes floatOrb { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(4%,8%) scale(1.08); } }
+
+    .ambient-grid {
+      position: absolute; inset: -40%;
+      background-image:
+        linear-gradient(rgba(201,169,106,0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,169,106,0.045) 1px, transparent 1px);
+      background-size: 64px 64px;
+      opacity: 0.3;
+      -webkit-mask-image: radial-gradient(circle at 50% 35%, #000 0%, transparent 62%);
+      mask-image: radial-gradient(circle at 50% 35%, #000 0%, transparent 62%);
+      animation: gridDrift 50s linear infinite;
+    }
+    @keyframes gridDrift { 0% { transform: translate(0,0);} 100% { transform: translate(64px,64px);} }
+
+    /* ===== Grão ===== */
+    .grain {
+      position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.035;
+      background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="n"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23n)"/%3E%3C/svg%3E');
+    }
+
+    /* ===== Barra de progresso ===== */
+    #scroll-progress {
+      position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+      background-color: var(--accent); z-index: 10001;
+      box-shadow: 0 0 10px rgba(201,169,106,0.5);
+    }
+
+    @keyframes neonGlow {
+      0%,100% { filter: drop-shadow(0 0 2px rgba(201,169,106,0.3)); }
+      50% { filter: drop-shadow(0 0 8px rgba(201,169,106,0.7)); }
+    }
+
+    h1,h2,h3 { font-family: var(--font-display); font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; }
+    p { color: var(--text-sec); font-weight: 400; }
+
+    .kicker {
+      font-family: var(--font-body); font-size: 0.75rem; font-weight: 600;
+      letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent);
+      margin-bottom: 1rem; display: block; animation: neonGlow 4s infinite ease-in-out;
+    }
+
+    .container { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 1.5rem; }
+    .section-padding { padding: 5.5rem 0; }
+    @media (min-width: 768px) { .section-padding { padding: 9rem 0; } }
+
+    .divider-wrapper { width: 100%; display: flex; justify-content: center; padding: 0 1.5rem; }
+    .divider {
+      width: 100%; max-width: 760px; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,169,106,0.5), transparent);
+      transform-origin: center; transform: scaleX(0);
+    }
+
+    /* ===== Marquee ===== */
+    .marquee-section {
+      width: 100%; max-width: 100%; overflow: hidden; padding: 1.1rem 0;
+      background-color: var(--bg-base);
+      border-top: 1px solid rgba(245,242,236,0.05);
+      border-bottom: 1px solid rgba(245,242,236,0.05);
+      display: flex; position: relative;
+    }
+    .marquee-content { display: flex; white-space: nowrap; animation: scrollMarquee 32s linear infinite; will-change: transform; }
+    .marquee-item {
+      font-family: var(--font-display); font-size: 0.9rem; font-weight: 600;
+      color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.12em;
+      display: flex; align-items: center; padding: 0 1.25rem;
+    }
+    .marquee-item span { color: var(--accent); margin-left: 1.25rem; font-size: 0.5rem; }
+    @media (min-width: 768px) {
+      .marquee-item { font-size: 1.05rem; padding: 0 1.75rem; }
+      .marquee-item span { font-size: 0.55rem; margin-left: 1.75rem; }
+    }
+    @keyframes scrollMarquee { 0% { transform: translateX(0);} 100% { transform: translateX(-50%);} }
+
+    /* ===== Preloader ===== */
+    #preloader {
+      position: fixed; inset: 0; height: 100vh; background-color: var(--bg-base);
+      z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .preloader-name {
+      font-family: var(--font-display); font-size: 1.75rem; font-weight: 600;
+      letter-spacing: 0.05em; color: var(--text-main); opacity: 0; transform: translateY(16px);
+    }
+    .preloader-line { width: 0; height: 1px; background-color: var(--accent); margin-top: 1rem; opacity: 0; }
+
+    /* ===== Hero ===== */
+    .hero {
+      position: relative; min-height: 100vh; min-height: 100svh;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding-bottom: 2.5rem; overflow: hidden;
+    }
+    .hero-bg { position: absolute; top: -4%; left: -4%; width: 108%; height: 108%; z-index: 1; }
+    .hero-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center 16%; filter: contrast(1.05) brightness(0.95); }
+    .hero-gradient {
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 92%; z-index: 2;
+      background: linear-gradient(to top, var(--bg-base) 0%, var(--bg-base) 14%, rgba(10,10,11,0.82) 48%, transparent 100%);
+    }
+    .hero-content { position: relative; z-index: 3; }
+    .hero h1 { font-size: 2.4rem; margin-bottom: 1.25rem; color: var(--text-main); }
+    .hero-line { overflow: hidden; display: block; }
+    .hero-line-inner { display: block; transform: translateY(110%); }
+    .hero p { font-size: 1.05rem; max-width: 520px; color: rgba(245,242,236,0.85); }
+    .hero .kicker { opacity: 0; }
+    .hero p.hero-sub { opacity: 0; transform: translateY(16px); }
+    .scroll-indicator {
+      position: absolute; bottom: 1.75rem; left: 50%; transform: translateX(-50%);
+      width: 1px; height: 36px; z-index: 3;
+      background: linear-gradient(to bottom, var(--accent), transparent);
+      animation: pulseLine 2.4s infinite ease-in-out;
+    }
+    @keyframes pulseLine {
+      0% { transform: translateX(-50%) scaleY(0); transform-origin: top; opacity: 0; }
+      50% { transform: translateX(-50%) scaleY(1); transform-origin: top; opacity: 1; }
+      50.1% { transform: translateX(-50%) scaleY(1); transform-origin: bottom; }
+      100% { transform: translateX(-50%) scaleY(0); transform-origin: bottom; opacity: 0; }
+    }
+    @media (max-width: 767px) {
+      .hero-gradient { height: 100%; background: linear-gradient(to top, var(--bg-base) 0%, var(--bg-base) 18%, rgba(10,10,11,0.94) 58%, transparent 100%); }
+    }
+    @media (min-width: 768px) {
+      .hero h1 { font-size: 4.6rem; }
+      .hero p { font-size: 1.2rem; }
+    }
+
+    /* ===== Glass card ===== */
+    .glass-card {
+      position: relative;
+      background: rgba(255,255,255,0.03);
+      -webkit-backdrop-filter: blur(14px) saturate(120%);
+      backdrop-filter: blur(14px) saturate(120%);
+      border: 1px solid rgba(245,242,236,0.08);
+      border-radius: 20px;
+      padding: 2.25rem 1.6rem;
+      overflow: hidden; isolation: isolate;
+    }
+    @media (min-width: 768px) { .glass-card { padding: 3.5rem 3rem; border-radius: 24px; } }
+    .glass-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: linear-gradient(160deg, rgba(255,255,255,0.06), transparent 42%);
+      pointer-events: none; z-index: 0;
+    }
+    .glass-card::after {
+      content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1px;
+      background: conic-gradient(from var(--angle,0deg),
+        transparent 0%, rgba(201,169,106,0) 60%, rgba(201,169,106,0.85) 78%,
+        var(--accent-soft) 85%, rgba(201,169,106,0.85) 92%, transparent 100%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      animation: borderFlow 7s linear infinite;
+      pointer-events: none; z-index: 1;
+    }
+    .glass-card > * { position: relative; z-index: 2; }
+    @property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+    @keyframes borderFlow { to { --angle: 360deg; } }
+    @supports not (background: conic-gradient(from var(--angle))) {
+      .glass-card::after { background: none; border: 1px solid rgba(201,169,106,0.22); padding: 0; -webkit-mask: none; mask: none; animation: neonGlow 4s infinite ease-in-out; }
+    }
+
+    .text-section { max-width: 720px; margin: 0 auto; }
+    .text-section h2 { font-size: 2rem; margin-bottom: 1.35rem; }
+    .text-section p { font-size: 1.08rem; }
+    @media (min-width: 768px) {
+      .text-section h2 { font-size: 3rem; }
+      .text-section p { font-size: 1.2rem; }
+    }
+    .text-section p + p { margin-top: 1.25rem; }
+
+    /* dois lados */
+    .split-section { display: grid; grid-template-columns: 1fr; gap: 2.5rem; align-items: center; }
+    @media (min-width: 768px) {
+      .split-section { grid-template-columns: 1fr 1fr; gap: 5rem; }
+      .split-section.reverse .split-text { order: 1; }
+      .split-section.reverse .split-image { order: 2; }
+    }
+    .img-reveal-wrapper {
+      position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 4/5;
+      clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+    }
+    .parallax-img {
+      width: 100%; height: 112%; object-fit: cover; position: absolute; top: -6%; left: 0;
+      filter: contrast(1.05) brightness(0.92);
+      will-change: transform; transform: translateZ(0); backface-visibility: hidden;
+    }
+    .split-text h2 { font-size: 1.9rem; margin-bottom: 1.25rem; }
+    .split-text p { font-size: 1.05rem; }
+    @media (min-width: 768px) { .split-text h2 { font-size: 2.7rem; } }
+
+    .word-reveal span { display: inline-block; opacity: 0.15; filter: blur(6px); transition: all 0.3s var(--ease-out); }
+    .title-reveal { opacity: 0; filter: blur(10px); transform: translateY(22px); }
+
+    /* manifesto */
+    .manifesto-lines { display: flex; flex-direction: column; gap: 1.35rem; margin-top: 2.5rem; }
+    .manifesto-line {
+      font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; color: var(--text-main);
+      opacity: 0; transform: translateY(18px); filter: blur(8px);
+    }
+    .manifesto-line:last-child { color: var(--accent); }
+    @media (min-width: 768px) { .manifesto-line { font-size: 2.3rem; } }
+
+    /* ===== CTA que abre o quiz ===== */
+    .cta-block { text-align: center; }
+    .cta-block h2 { font-size: 2rem; margin-bottom: 1rem; }
+    .cta-block p { font-size: 1.08rem; max-width: 560px; margin: 0 auto 2.25rem auto; }
+    @media (min-width: 768px) { .cta-block h2 { font-size: 3rem; } .cta-block p { font-size: 1.2rem; } }
+
+    .btn-primary {
+      display: inline-block; background-color: var(--text-main); color: var(--bg-base);
+      border: none; padding: 1.15rem 2.25rem; font-family: var(--font-body);
+      font-size: 0.9rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+      border-radius: 100px; cursor: pointer; position: relative; overflow: hidden;
+      transition: all 0.4s var(--ease-out); animation: subtlePulse 3s infinite;
+    }
+    @keyframes subtlePulse {
+      0% { box-shadow: 0 0 0 0 rgba(201,169,106,0.4); }
+      70% { box-shadow: 0 0 0 12px rgba(201,169,106,0); }
+      100% { box-shadow: 0 0 0 0 rgba(201,169,106,0); }
+    }
+    @media (min-width: 768px) { .btn-primary:hover { background-color: var(--accent); transform: scale(0.98); } }
+    .btn-primary:active { transform: scale(0.96); }
+
+    /* ===== Modal do Quiz ===== */
+    .quiz-overlay {
+      position: fixed; inset: 0; z-index: 12000;
+      background: rgba(8,8,9,0.8);
+      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; padding: 1.25rem;
+    }
+    .quiz-overlay.open { display: flex; }
+    .quiz-box {
+      position: relative; width: 100%; max-width: 560px;
+      background: rgba(20,20,22,0.92);
+      border: 1px solid rgba(245,242,236,0.1); border-radius: 22px;
+      padding: 2rem 1.5rem 2.25rem; overflow: hidden;
+      max-height: 92vh; overflow-y: auto;
+    }
+    @media (min-width: 768px) { .quiz-box { padding: 2.75rem 2.5rem 3rem; } }
+
+    .quiz-close {
+      position: absolute; top: 1rem; right: 1.15rem; background: none; border: none;
+      color: var(--text-sec); font-size: 1.5rem; cursor: pointer; line-height: 1; z-index: 5;
+    }
+    .quiz-close:hover { color: var(--text-main); }
+
+    .quiz-progress-track { height: 3px; width: 100%; background: rgba(245,242,236,0.08); border-radius: 3px; margin-bottom: 2rem; overflow: hidden; }
+    .quiz-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); transition: width 0.5s var(--ease-out); }
+
+    .quiz-step { display: none; }
+    .quiz-step.active { display: block; animation: quizIn 0.5s var(--ease-out); }
+    @keyframes quizIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+    .quiz-kicker { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.85rem; display: block; }
+    .quiz-question { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1.15; margin-bottom: 1.75rem; color: var(--text-main); }
+    @media (min-width: 768px) { .quiz-question { font-size: 1.9rem; } }
+
+    .quiz-options { display: flex; flex-direction: column; gap: 0.75rem; }
+    .quiz-option {
+      text-align: left; padding: 1rem 1.2rem; background: transparent;
+      border: 1px solid rgba(245,242,236,0.1); border-radius: 12px; color: var(--text-main);
+      font-family: var(--font-body); font-size: 0.98rem; cursor: pointer;
+      transition: all 0.25s var(--ease-out);
+    }
+    .quiz-option:hover { border-color: var(--accent); background: rgba(201,169,106,0.06); }
+    .quiz-option.selected { border-color: var(--accent); background: var(--accent); color: var(--bg-base); font-weight: 500; }
+
+    .quiz-fields { display: flex; flex-direction: column; gap: 1.35rem; }
+    .quiz-field label { display: block; font-size: 0.82rem; font-weight: 500; color: var(--text-main); margin-bottom: 0.5rem; }
+    .quiz-field input {
+      width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--line);
+      color: var(--text-main); font-family: var(--font-body); font-size: 1rem; padding: 0.65rem 0;
+      outline: none; border-radius: 0; transition: border-color 0.3s ease;
+    }
+    .quiz-field input:focus { border-bottom-color: var(--accent); }
+    .quiz-field input::placeholder { color: #4A4A52; }
+    .quiz-field.has-error input { border-bottom-color: var(--error); }
+    .quiz-field-error { color: var(--error); font-size: 0.72rem; margin-top: 0.4rem; display: none; }
+    .quiz-field.has-error .quiz-field-error { display: block; }
+
+    .quiz-nav { margin-top: 1.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .quiz-back { background: none; border: none; color: var(--text-sec); font-family: var(--font-body); font-size: 0.85rem; cursor: pointer; padding: 0.5rem 0; }
+    .quiz-back:hover { color: var(--text-main); }
+    .quiz-back.hidden { visibility: hidden; }
+    .quiz-next {
+      background-color: var(--text-main); color: var(--bg-base); border: none;
+      padding: 0.85rem 1.75rem; font-family: var(--font-body); font-size: 0.82rem; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase; border-radius: 100px; cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+    }
+    .quiz-next:hover { background-color: var(--accent); }
+    .quiz-next:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .quiz-hint { font-size: 0.9rem; color: var(--text-sec); margin-top: 1.1rem; line-height: 1.5; }
+
+    .quiz-success { text-align: center; padding: 1.5rem 0; }
+    .quiz-success .check { font-size: 2.5rem; color: var(--accent); margin-bottom: 1rem; }
+    .quiz-success h3 { font-family: var(--font-display); font-size: 1.6rem; margin-bottom: 0.85rem; color: var(--text-main); }
+    .quiz-success p { font-size: 1rem; color: var(--text-sec); }
+    .quiz-global-error { color: var(--error); font-size: 0.85rem; text-align: center; margin-top: 1rem; display: none; }
+
+    /* ===== Footer ===== */
+    footer { padding: 3rem 1.5rem; text-align: center; }
+    .footer-content { display: flex; flex-direction: column; align-items: center; gap: 0.85rem; margin-top: 2.5rem; }
+    footer p, footer a { font-size: 0.85rem; color: var(--text-sec); text-decoration: none; }
+    footer a:hover { color: var(--text-main); }
+
+    .reveal { opacity: 0; visibility: hidden; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-bg">
+    <div class="ambient-grid"></div>
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+  </div>
+  <div class="grain"></div>
+  <div id="scroll-progress"></div>
+
+  <div id="preloader">
+    <div class="preloader-name">RAMON NETO</div>
+    <div class="preloader-line"></div>
+  </div>
+
+  <!-- HERO -->
+  <header class="hero" id="hero">
+    <div class="hero-bg"><img id="img-hero" src="" alt="Ramon Neto" /></div>
+    <div class="hero-gradient"></div>
+    <div class="container hero-content">
+      <span class="kicker">@ramonnetomkt</span>
+      <h1>
+        <span class="hero-line"><span class="hero-line-inner">Medicina por propósito.</span></span>
+        <span class="hero-line"><span class="hero-line-inner">Digital por liberdade.</span></span>
+      </h1>
+      <p class="hero-sub">Quase médico. Empreendedor digital há 3 anos. O cara tranquilo que documenta a rotina de quem construiu liberdade sem fórmula mágica.</p>
+    </div>
+    <div class="scroll-indicator"></div>
+  </header>
+
+  <div class="divider-wrapper"><div class="divider"></div></div>
+
+  <!-- QUEM SOU EU -->
+  <section class="section-padding" id="about">
+    <div class="container text-section reveal glass-card">
+      <span class="kicker">Quem sou eu</span>
+      <h2 class="title-reveal">Prazer, eu sou o Ramon.</h2>
+      <p>Você provavelmente me conhece pelos vídeos: o cara tranquilo mostrando um dia normal da semana. Academia, um trabalho no computador, um café, a namorada, o carro. Uma rotina leve, sem estresse, correndo atrás de uma coisa só: liberdade.</p>
+      <p>O que talvez você não saiba é que essa tranquilidade não caiu do céu. Estou a poucos meses de me tornar médico e, há três anos, construo minha renda dentro da internet. Duas vidas ao mesmo tempo. E eu não vim te prometer dinheiro fácil. Vim te mostrar o caminho real, o mesmo que eu trilho todo dia. É difícil. Mas é possível.</p>
+    </div>
+  </section>
+
+  <div class="divider-wrapper"><div class="divider"></div></div>
+
+  <!-- PROPÓSITO (Medicina) -->
+  <section class="section-padding" id="proposito">
+    <div class="container split-section">
+      <div class="split-image">
+        <div class="img-reveal-wrapper"><img id="img-medicina" src="" class="parallax-img" alt="Ramon Neto, medicina" /></div>
+      </div>
+      <div class="split-text reveal">
+        <span class="kicker">Propósito</span>
+        <h2 class="title-reveal">A medicina me deu o que nenhum guru tem.</h2>
+        <p>Método. Quando você cuida de uma vida, não existe atalho, não existe promessa vazia, não existe achismo. Existe estudo, protocolo e verdade. Foi exatamente essa mentalidade que eu trouxe pro digital. Por isso você nunca vai me ver vendendo milagre. Só o que funciona, do jeito honesto, com o pé no chão de quem foi treinado pra não errar com o que importa.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider-wrapper"><div class="divider"></div></div>
+
+  <!-- LIBERDADE (Digital) -->
+  <section class="section-padding" id="liberdade">
+    <div class="container split-section reverse">
+      <div class="split-text reveal">
+        <span class="kicker">Liberdade</span>
+        <h2 class="title-reveal">Enquanto estudava, achei outra saída.</h2>
+        <p>Descobri que dava pra construir liberdade sem depender de sorte, sem herança e sem esperar a formatura. Aprendi vendas, prospecção e tráfego na prática, errando e ajustando. Hoje eu trabalho de onde eu quiser, no meu tempo, no meu ritmo. É essa liberdade tranquila que aparece nos meus vídeos. E é exatamente ela que eu quero te ajudar a construir, do zero, do jeito certo.</p>
+      </div>
+      <div class="split-image">
+        <div class="img-reveal-wrapper"><img id="img-digital" src="" class="parallax-img" alt="Ramon Neto, liberdade digital" /></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <section class="marquee-section">
+    <div class="marquee-content" id="marquee">
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+    </div>
+  </section>
+
+  <!-- MANIFESTO -->
+  <section class="section-padding" id="manifesto">
+    <div class="container text-section glass-card reveal">
+      <span class="kicker">No que eu acredito</span>
+      <div class="manifesto-lines">
+        <div class="manifesto-line">Odeio promessa de dinheiro fácil.</div>
+        <div class="manifesto-line">Odeio guru que vende sonho e entrega frustração.</div>
+        <div class="manifesto-line">Aqui é o oposto disso.</div>
+        <div class="manifesto-line">É difícil. Mas é possível.</div>
+        <div class="manifesto-line">E o primeiro passo começa agora.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider-wrapper"><div class="divider"></div></div>
+
+  <!-- CTA que abre o QUIZ -->
+  <section class="section-padding" id="cta">
+    <div class="container cta-block reveal">
+      <span class="kicker">O primeiro passo</span>
+      <h2 class="title-reveal">Será que isso é pra você?</h2>
+      <p>Não vou te empurrar nada. Responde 6 perguntas rápidas, com honestidade, e você mesmo vai descobrir se faz sentido a gente andar junto. Leva menos de um minuto.</p>
+      <button class="btn-primary" id="open-quiz">Descobrir agora</button>
+    </div>
+  </section>
+
+  <footer>
+    <div class="divider-wrapper"><div class="divider"></div></div>
+    <div class="footer-content">
+      <p>Ramon Neto</p>
+      <a href="https://instagram.com/ramonnetomkt" target="_blank" rel="noopener noreferrer">@ramonnetomkt</a>
+      <p id="current-year"></p>
+    </div>
+  </footer>
+
+  <!-- ===== QUIZ MODAL ===== -->
+  <div class="quiz-overlay" id="quiz-overlay">
+    <div class="quiz-box">
+      <button class="quiz-close" id="quiz-close" aria-label="Fechar">&times;</button>
+      <div class="quiz-progress-track"><div class="quiz-progress-fill" id="quiz-progress"></div></div>
+      <form id="quiz-form" novalidate>
+
+        <!-- 1: sim fácil -->
+        <div class="quiz-step active" data-step="0">
+          <span class="quiz-kicker">Pergunta 1 de 6</span>
+          <div class="quiz-question">Você gostaria de ganhar dinheiro pela internet e ter mais liberdade no seu dia?</div>
+          <div class="quiz-options" data-name="q1">
+            <button type="button" class="quiz-option" data-value="Sim, com certeza">Sim, com certeza</button>
+            <button type="button" class="quiz-option" data-value="Sim, mas ainda tenho medo de não dar certo">Sim, mas ainda tenho medo de não dar certo</button>
+          </div>
+        </div>
+
+        <!-- 2: conforto do difícil mas possível -->
+        <div class="quiz-step" data-step="1">
+          <span class="quiz-kicker">Pergunta 2 de 6</span>
+          <div class="quiz-question">Se eu te disser que ganhar dinheiro na internet não é fácil como te prometem, mas é totalmente possível, isso te dá mais confiança em mim?</div>
+          <div class="quiz-options" data-name="q2">
+            <button type="button" class="quiz-option" data-value="Sim, prefiro a verdade">Sim, prefiro a verdade a promessa vazia</button>
+            <button type="button" class="quiz-option" data-value="Sim, cansei de guru que promete milagre">Sim, cansei de guru que promete milagre</button>
+          </div>
+        </div>
+
+        <!-- 3: dor / situação atual -->
+        <div class="quiz-step" data-step="2">
+          <span class="quiz-kicker">Pergunta 3 de 6</span>
+          <div class="quiz-question">Hoje, o que mais te incomoda?</div>
+          <div class="quiz-options" data-name="q3">
+            <button type="button" class="quiz-option" data-value="Trabalho muito e não tenho liberdade">Trabalho muito e não tenho liberdade</button>
+            <button type="button" class="quiz-option" data-value="Quero uma renda extra na internet">Quero uma renda extra na internet</button>
+            <button type="button" class="quiz-option" data-value="Já tento no digital mas não decolo">Já tento no digital mas não decolo</button>
+            <button type="button" class="quiz-option" data-value="Não sei nem por onde começar">Não sei nem por onde começar</button>
+          </div>
+        </div>
+
+        <!-- 4: qualificação de momento -->
+        <div class="quiz-step" data-step="3">
+          <span class="quiz-kicker">Pergunta 4 de 6</span>
+          <div class="quiz-question">Em qual momento da jornada digital você está hoje?</div>
+          <div class="quiz-options" data-name="momento">
+            <button type="button" class="quiz-option" data-value="Começando do zero absoluto">Começando do zero absoluto</button>
+            <button type="button" class="quiz-option" data-value="Tentando as primeiras vendas (X1 ou orgânico)">Tentando as primeiras vendas (X1 ou orgânico)</button>
+            <button type="button" class="quiz-option" data-value="Já presto serviço ou rodo tráfego, quero escalar">Já presto serviço ou rodo tráfego, quero escalar</button>
+            <button type="button" class="quiz-option" data-value="Operação avançada (tráfego direto, COD, escala)">Operação avançada (tráfego direto, COD, escala)</button>
+          </div>
+        </div>
+
+        <!-- 5: qualificação de capital -->
+        <div class="quiz-step" data-step="4">
+          <span class="quiz-kicker">Pergunta 5 de 6</span>
+          <div class="quiz-question">Quanto você tem disponível hoje para investir na sua operação?</div>
+          <div class="quiz-options" data-name="investimento">
+            <button type="button" class="quiz-option" data-value="Menos de R$ 1.000">Menos de R$ 1.000</button>
+            <button type="button" class="quiz-option" data-value="R$ 1.000 a R$ 5.000">R$ 1.000 a R$ 5.000</button>
+            <button type="button" class="quiz-option" data-value="R$ 5.000 a R$ 10.000">R$ 5.000 a R$ 10.000</button>
+            <button type="button" class="quiz-option" data-value="Mais de R$ 10.000">Mais de R$ 10.000</button>
+          </div>
+        </div>
+
+        <!-- 6: dados de contato -->
+        <div class="quiz-step" data-step="5">
+          <span class="quiz-kicker">Falta pouco</span>
+          <div class="quiz-question">Perfeito. Deixa seus dados que eu te aviso em primeira mão.</div>
+          <div class="quiz-fields">
+            <div class="quiz-field" id="qf-nome">
+              <label for="q-nome">Seu nome</label>
+              <input type="text" id="q-nome" name="nome" placeholder="Nome completo" />
+              <div class="quiz-field-error">Preenche seu nome.</div>
+            </div>
+            <div class="quiz-field" id="qf-instagram">
+              <label for="q-instagram">Seu @ do Instagram</label>
+              <input type="text" id="q-instagram" name="instagram" placeholder="@seuusuario" />
+              <div class="quiz-field-error">Preenche seu @.</div>
+            </div>
+            <div class="quiz-field" id="qf-cidade">
+              <label for="q-cidade">Cidade / Estado</label>
+              <input type="text" id="q-cidade" name="cidade" placeholder="Ex: Teresina / PI" />
+              <div class="quiz-field-error">Preenche sua cidade.</div>
+            </div>
+          </div>
+          <p class="quiz-hint">Sem spam. É só pra te avisar quando abrir e garantir que você entre entre os primeiros.</p>
+          <div class="quiz-global-error" id="quiz-global-error">Deu um erro ao enviar. Tenta de novo.</div>
+        </div>
+
+        <!-- sucesso -->
+        <div class="quiz-step" data-step="6">
+          <div class="quiz-success">
+            <div class="check">✦</div>
+            <h3>Você está dentro.</h3>
+            <p>Em breve você vai ser um dos primeiros a saber. Continua acompanhando o @ramonnetomkt.</p>
+          </div>
+        </div>
+
+        <div class="quiz-nav" id="quiz-nav">
+          <button type="button" class="quiz-back hidden" id="quiz-back">Voltar</button>
+          <button type="button" class="quiz-next" id="quiz-next" disabled>Continuar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <script>
+    /* ============ CONFIG - EDITE AQUI ============ */
+    const CONFIG = {
+      FORM_ENDPOINT: "https://formspree.io/f/xgogegjj",
+      FOTO_HERO: "https://i.ibb.co/Kcv0LQP9/medicina.jpg",
+      FOTO_MEDICINA: "https://i.ibb.co/Kcv0LQP9/medicina.jpg",
+      FOTO_DIGITAL: "https://i.ibb.co/jZbdYVXL/hero.jpg"
+    };
+
+    document.getElementById('current-year').innerText = `© ${new Date().getFullYear()}`;
+    document.getElementById('img-hero').src = CONFIG.FOTO_HERO;
+    document.getElementById('img-medicina').src = CONFIG.FOTO_MEDICINA;
+    document.getElementById('img-digital').src = CONFIG.FOTO_DIGITAL;
+
+    gsap.registerPlugin(ScrollTrigger);
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ====== ANIMAÇÕES ====== */
+    function initAnimations() {
+      if (prefersReducedMotion) {
+        document.getElementById('preloader').style.display = 'none';
+        gsap.set('.reveal, .hero-line-inner, .hero-sub, .hero .kicker, .manifesto-line, .title-reveal', { autoAlpha: 1, y: 0, filter: 'blur(0px)', visibility: 'visible' });
+        gsap.set('.divider', { scaleX: 1 });
+        gsap.set('.img-reveal-wrapper', { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' });
+        gsap.set('#scroll-progress', { width: '100%' });
+        return;
+      }
+
+      const lenis = new Lenis({ duration: 1.15, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+      function raf(time){ lenis.raf(time); requestAnimationFrame(raf); }
+      requestAnimationFrame(raf);
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add((t)=> lenis.raf(t*1000));
+      gsap.ticker.lagSmoothing(0,0);
+      window.__lenis = lenis;
+
+      gsap.to('#scroll-progress', { width: '100%', ease: 'none', scrollTrigger: { trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: 0.3 } });
+
+      const tl = gsap.timeline();
+      tl.to('.preloader-name', { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' })
+        .to('.preloader-line', { width: '110px', autoAlpha: 1, duration: 0.4, ease: 'power2.out' }, "-=0.2")
+        .to('#preloader', { yPercent: -100, duration: 0.8, ease: 'power3.inOut', delay: 0.25 })
+        .call(initScroll);
+
+      function initScroll() {
+        const h = gsap.timeline();
+        h.to('.hero .kicker', { autoAlpha: 1, duration: 0.6, ease: 'power2.out' })
+         .to('.hero-line-inner', { y: 0, duration: 0.8, stagger: 0.06, ease: 'power3.out' }, "-=0.4")
+         .to('.hero-sub', { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, "-=0.4");
+
+        gsap.fromTo('.hero-bg img', { scale: 1 }, { scale: 1.07, duration: 22, ease: 'sine.inOut', yoyo: true, repeat: -1, transformOrigin: 'center center' });
+        gsap.to('.hero-bg', { yPercent: 22, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+
+        gsap.utils.toArray('.reveal').forEach(el => {
+          gsap.fromTo(el, { autoAlpha: 0, y: 22 }, { scrollTrigger: { trigger: el, start: 'top 85%' }, autoAlpha: 1, y: 0, duration: 0.8, ease: 'power2.out' });
+        });
+        gsap.utils.toArray('.title-reveal').forEach(t => {
+          gsap.to(t, { scrollTrigger: { trigger: t, start: 'top 85%' }, autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.8, ease: 'power2.out' });
+        });
+        gsap.utils.toArray('.divider').forEach(l => {
+          gsap.to(l, { scrollTrigger: { trigger: l, start: 'top 90%' }, scaleX: 1, duration: 1, ease: 'power3.out' });
+        });
+        gsap.utils.toArray('.img-reveal-wrapper').forEach(w => {
+          gsap.to(w, { scrollTrigger: { trigger: w, start: 'top 85%' }, clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)', duration: 1.2, ease: 'power3.inOut' });
+        });
+        gsap.utils.toArray('.parallax-img').forEach(img => {
+          gsap.fromTo(img, { yPercent: -6 }, { yPercent: 6, ease: 'none', scrollTrigger: { trigger: img.parentElement, start: 'top bottom', end: 'bottom top', scrub: 1 } });
+        });
+        gsap.utils.toArray('.manifesto-line').forEach((line, i) => {
+          gsap.to(line, { scrollTrigger: { trigger: '.manifesto-lines', start: 'top 80%' }, autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.8, delay: i * 0.15, ease: 'power2.out' });
+        });
+
+        ScrollTrigger.refresh();
+      }
+    }
+    window.addEventListener('load', initAnimations);
+
+    // recalcula no resize/zoom para nao quebrar formatacao
+    let rt;
+    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => ScrollTrigger.refresh(), 200); });
+
+    /* ====== QUIZ ====== */
+    const overlay = document.getElementById('quiz-overlay');
+    const openBtn = document.getElementById('open-quiz');
+    const closeBtn = document.getElementById('quiz-close');
+    const steps = Array.from(document.querySelectorAll('.quiz-step'));
+    const progress = document.getElementById('quiz-progress');
+    const backBtn = document.getElementById('quiz-back');
+    const nextBtn = document.getElementById('quiz-next');
+    const nav = document.getElementById('quiz-nav');
+    const globalError = document.getElementById('quiz-global-error');
+    const TOTAL_QUESTION_STEPS = 6; // passos 0..5 (o 6 e sucesso)
+    let current = 0;
+    const answers = {};
+
+    function openQuiz() {
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      if (window.__lenis) window.__lenis.stop();
+    }
+    function closeQuiz() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      if (window.__lenis) window.__lenis.start();
+    }
+    openBtn.addEventListener('click', openQuiz);
+    closeBtn.addEventListener('click', closeQuiz);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeQuiz(); });
+
+    function showStep(i) {
+      steps.forEach(s => s.classList.remove('active'));
+      steps[i].classList.add('active');
+      current = i;
+      const pct = Math.min(100, Math.round((i / TOTAL_QUESTION_STEPS) * 100));
+      progress.style.width = pct + '%';
+      backBtn.classList.toggle('hidden', i === 0);
+      updateNextState();
+    }
+
+    // seleção de opção
+    document.querySelectorAll('.quiz-options').forEach(group => {
+      group.querySelectorAll('.quiz-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          group.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          answers[group.dataset.name] = opt.dataset.value;
+          updateNextState();
+          // avanço automático nas perguntas de opção, cria fluidez
+          setTimeout(() => { if (current < 5) goNext(); }, 260);
+        });
+      });
+    });
+
+    function currentIsOptionStep() { return current <= 4; }
+
+    function updateNextState() {
+      if (current === 5) {
+        nextBtn.textContent = 'Quero entrar';
+        nextBtn.disabled = false;
+        nav.style.display = 'flex';
+        return;
+      }
+      if (current === 6) { nav.style.display = 'none'; return; }
+      nav.style.display = 'flex';
+      nextBtn.textContent = 'Continuar';
+      const group = steps[current].querySelector('.quiz-options');
+      nextBtn.disabled = !(group && answers[group.dataset.name]);
+    }
+
+    function goNext() {
+      if (current < 5) { showStep(current + 1); return; }
+      if (current === 5) { submitQuiz(); }
+    }
+    nextBtn.addEventListener('click', goNext);
+    backBtn.addEventListener('click', () => { if (current > 0) showStep(current - 1); });
+
+    async function submitQuiz() {
+      globalError.style.display = 'none';
+      const nome = document.getElementById('q-nome');
+      const insta = document.getElementById('q-instagram');
+      const cidade = document.getElementById('q-cidade');
+      let ok = true;
+      [['qf-nome', nome], ['qf-instagram', insta], ['qf-cidade', cidade]].forEach(([id, el]) => {
+        const field = document.getElementById(id);
+        if (!el.value.trim()) { field.classList.add('has-error'); ok = false; }
+        else field.classList.remove('has-error');
+      });
+      if (!ok) return;
+
+      answers.nome = nome.value.trim();
+      answers.instagram = insta.value.trim();
+      answers.cidade = cidade.value.trim();
+
+      nextBtn.disabled = true;
+      nextBtn.textContent = 'Enviando...';
+      try {
+        const res = await fetch(CONFIG.FORM_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(answers)
+        });
+        if (res.ok) {
+          showStep(6);
+          progress.style.width = '100%';
+        } else { throw new Error('erro'); }
+      } catch (e) {
+        globalError.style.display = 'block';
+        nextBtn.disabled = false;
+        nextBtn.textContent = 'Quero entrar';
+      }
+    }
+
+    // limpar erro ao digitar
+    ['q-nome','q-instagram','q-cidade'].forEach(id => {
+      document.getElementById(id).addEventListener('input', (e) => e.target.closest('.quiz-field').classList.remove('has-error'));
+    });
+  </script>
+</body>
+</html>
