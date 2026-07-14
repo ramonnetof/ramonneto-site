@@ -1,0 +1,1544 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ramon Neto | Acesso Antecipado</title>
+  
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS Variables & Theme Setup */
+    :root {
+      --bg-base: #0A0A0B;
+      --bg-surface: #141416;
+      --text-main: #F5F2EC;
+      --text-sec: #9C978F;
+      --accent: #C9A96A;
+      --line: rgba(245, 242, 236, 0.08);
+      --error: #b55353;
+      
+      --font-display: 'Bricolage Grotesque', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-in-out: cubic-bezier(0.83, 0, 0.17, 1);
+    }
+
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* overflow-x hidden em html e body para matar qualquer vazamento horizontal.
+       scroll-behavior smooth foi REMOVIDO de proposito: quem cuida da rolagem suave e o Lenis. */
+    html {
+      overflow-x: hidden;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      position: relative;
+      line-height: 1.6;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    /* Animated Ambient Background */
+    .ambient-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+      background-color: var(--bg-base);
+    }
+
+    /* grade de luz futurista, bem sutil, com leve deriva continua */
+    .ambient-grid {
+      position: absolute;
+      inset: -50%;
+      background-image:
+        linear-gradient(rgba(201, 169, 106, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 169, 106, 0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.35;
+      -webkit-mask-image: radial-gradient(circle at 50% 40%, #000 0%, transparent 65%);
+      mask-image: radial-gradient(circle at 50% 40%, #000 0%, transparent 65%);
+      animation: gridDrift 40s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes gridDrift {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(60px, 60px); }
+    }
+
+    .ambient-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.25;
+      animation: floatOrb 25s infinite alternate ease-in-out;
+    }
+
+    .orb-1 {
+      width: 40vw;
+      height: 40vw;
+      background: var(--accent);
+      top: -10%;
+      left: -10%;
+      opacity: 0.15;
+    }
+
+    .orb-2 {
+      width: 60vw;
+      height: 60vw;
+      background: #1e1e24;
+      bottom: -20%;
+      right: -10%;
+      animation-duration: 35s;
+      animation-delay: -10s;
+    }
+
+    /* No celular, blur mais leve para nao pesar na GPU e travar a rolagem */
+    @media (max-width: 767px) {
+      .ambient-orb { filter: blur(70px); }
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(5%, 10%) scale(1.1); }
+    }
+
+    /* Scroll Progress */
+    #scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 3px;
+      background-color: var(--accent);
+      z-index: 10001;
+      box-shadow: 0 0 10px rgba(201, 169, 106, 0.5);
+    }
+
+    /* Continuous Glow Animation */
+    @keyframes neonGlow {
+      0%, 100% { filter: drop-shadow(0 0 2px rgba(201,169,106,0.3)); }
+      50% { filter: drop-shadow(0 0 8px rgba(201,169,106,0.7)); }
+    }
+
+    /* Film Grain Overlay */
+    .grain {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.04;
+      background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+    }
+
+    /* Typography */
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .kicker {
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      display: block;
+      animation: neonGlow 4s infinite ease-in-out;
+    }
+
+    p {
+      color: var(--text-sec);
+      font-weight: 400;
+    }
+
+    /* Layout Utilities */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    .section-padding {
+      padding: 6rem 0;
+    }
+    
+    @media (min-width: 768px) {
+      .section-padding {
+        padding: 10rem 0;
+      }
+    }
+
+    /* Hairline Divider */
+    .divider-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 0 1.5rem;
+    }
+
+    .golden-hairline {
+      width: 1px;
+      height: 80px;
+      background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+      margin: 0 auto 2rem auto;
+      animation: neonGlow 4s infinite ease-in-out;
+    }
+
+    .divider {
+      width: 100%;
+      max-width: 800px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201, 169, 106, 0.5), transparent);
+      transform-origin: center;
+      transform: scaleX(0); /* For GSAP */
+      animation: neonGlow 4s infinite ease-in-out;
+    }
+
+    /* Marquee (faixa horizontal infinita) - tamanhos reduzidos e responsivos */
+    .marquee-section {
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+      padding: 1.25rem 0;
+      background-color: var(--bg-base);
+      border-top: 1px solid rgba(245, 242, 236, 0.05);
+      border-bottom: 1px solid rgba(245, 242, 236, 0.05);
+      display: flex;
+      position: relative;
+    }
+
+    .marquee-content {
+      display: flex;
+      white-space: nowrap;
+      animation: scrollMarquee 30s linear infinite;
+      will-change: transform;
+    }
+
+    .marquee-item {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-sec);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      display: flex;
+      align-items: center;
+      padding: 0 1.25rem;
+    }
+
+    .marquee-item span {
+      color: var(--accent);
+      margin-left: 1.25rem;
+      font-size: 0.55rem;
+      animation: neonGlow 4s infinite ease-in-out;
+    }
+
+    @media (min-width: 768px) {
+      .marquee-item { font-size: 1.1rem; padding: 0 1.75rem; }
+      .marquee-item span { font-size: 0.6rem; margin-left: 1.75rem; }
+    }
+
+    @keyframes scrollMarquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Preloader */
+    #preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background-color: var(--bg-base);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preloader-name {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--text-main);
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .preloader-line {
+      width: 0px;
+      height: 1px;
+      background-color: var(--accent);
+      margin-top: 1rem;
+      opacity: 0;
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      top: -5%;
+      left: -5%;
+      width: 110%;
+      height: 110%;
+      z-index: 1;
+    }
+
+    .hero-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 18%;
+      filter: contrast(1.05) brightness(0.95);
+    }
+
+    .hero-gradient {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 90%;
+      background: linear-gradient(to top, var(--bg-base) 0%, var(--bg-base) 15%, rgba(10, 10, 11, 0.8) 50%, transparent 100%);
+      z-index: 2;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 3;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-main);
+    }
+
+    .hero-line {
+      overflow: hidden;
+      display: block;
+    }
+
+    .hero-line-inner {
+      display: block;
+      transform: translateY(110%);
+    }
+
+    .hero p {
+      font-size: 1.125rem;
+      max-width: 500px;
+      color: rgba(245, 242, 236, 0.85);
+    }
+
+    .hero .kicker {
+      opacity: 0;
+    }
+
+    .hero p.hero-sub {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--accent), transparent);
+      z-index: 3;
+      animation: pulseLine 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseLine {
+      0% { transform: translateX(-50%) scaleY(0); transform-origin: top; opacity: 0; }
+      50% { transform: translateX(-50%) scaleY(1); transform-origin: top; opacity: 1; }
+      50.1% { transform: translateX(-50%) scaleY(1); transform-origin: bottom; }
+      100% { transform: translateX(-50%) scaleY(0); transform-origin: bottom; opacity: 0; }
+    }
+
+    @media (max-width: 767px) {
+      .hero h1 { font-size: 2.25rem; margin-bottom: 1rem; }
+      .hero-bg img { object-position: center 15%; }
+      .hero-gradient { 
+        height: 100%; 
+        background: linear-gradient(to top, var(--bg-base) 0%, var(--bg-base) 20%, rgba(10, 10, 11, 0.95) 60%, transparent 100%); 
+      }
+    }
+
+    @media (min-width: 768px) {
+      .hero h1 { font-size: 5rem; }
+      .hero p { font-size: 1.25rem; }
+    }
+
+    /* Standard Layouts (About, Medicine, Digital) */
+    .split-section {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .split-section.reverse .split-text {
+      order: 2;
+    }
+    .split-section.reverse .split-image {
+      order: 1;
+    }
+
+    @media (min-width: 768px) {
+      .split-section {
+        grid-template-columns: 1fr 1fr;
+        gap: 6rem;
+      }
+      .split-section.reverse .split-text {
+        order: 1;
+      }
+      .split-section.reverse .split-image {
+        order: 2;
+      }
+    }
+
+    .img-reveal-wrapper {
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+      aspect-ratio: 4/5;
+      clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+    }
+
+    .parallax-img {
+      width: 100%;
+      height: 112%; /* menos altura extra = parallax mais leve */
+      object-fit: cover;
+      position: absolute;
+      top: -6%;
+      left: 0;
+      filter: contrast(1.05) brightness(0.9);
+      will-change: transform;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+
+    .split-text h2 {
+      font-size: 2.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .split-text p {
+      font-size: 1.125rem;
+    }
+
+    @media (min-width: 768px) {
+      .split-text h2 { font-size: 3rem; }
+    }
+
+    /* Simple Text Section (About) */
+    .text-section {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .text-section h2 {
+      font-size: 2.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .text-section p {
+      font-size: 1.125rem;
+    }
+    
+    @media (min-width: 768px) {
+      .text-section h2 { font-size: 3.5rem; }
+      .text-section p { font-size: 1.25rem; }
+    }
+
+    /* Premium Text Only Sections */
+    .premium-text-section {
+      background-color: var(--bg-surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .giant-bg-text-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .giant-bg-text {
+      font-family: var(--font-display);
+      font-size: 22vw;
+      font-weight: 700;
+      color: #1a1a1c; /* Slightly lighter than surface */
+      white-space: nowrap;
+      user-select: none;
+      opacity: 0.6;
+    }
+
+    .premium-text-section .container {
+      position: relative;
+      z-index: 1;
+    }
+
+    .text-center {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 850px;
+    }
+    
+    .text-center p {
+      max-width: 650px;
+    }
+
+    .text-section .display-heading {
+      font-size: 2.5rem;
+      line-height: 1.05;
+      margin: 1.5rem 0 2rem 0;
+    }
+
+    @media (min-width: 768px) {
+      .text-section .display-heading {
+        font-size: 4rem;
+      }
+    }
+
+    /* ===== Glass Card (estilo iOS) + borda neon dourada continua ===== */
+    .glass-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      -webkit-backdrop-filter: blur(14px) saturate(120%);
+      backdrop-filter: blur(14px) saturate(120%);
+      border: 1px solid rgba(245, 242, 236, 0.08);
+      border-radius: 18px;
+      padding: 2.5rem 1.75rem;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    @media (min-width: 768px) {
+      .glass-card { padding: 4rem 3.5rem; border-radius: 24px; }
+    }
+
+    /* leve brilho interno no topo, sensacao de vidro */
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(160deg, rgba(255,255,255,0.06), transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* borda de luz dourada que percorre o contorno em loop continuo */
+    .glass-card::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: conic-gradient(from var(--angle, 0deg),
+        transparent 0%,
+        rgba(201, 169, 106, 0.0) 60%,
+        rgba(201, 169, 106, 0.9) 78%,
+        rgba(245, 226, 178, 1) 85%,
+        rgba(201, 169, 106, 0.9) 92%,
+        transparent 100%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      animation: borderFlow 6s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .glass-card > * { position: relative; z-index: 2; }
+
+    @property --angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    @keyframes borderFlow {
+      to { --angle: 360deg; }
+    }
+
+    /* fallback para navegadores sem @property: mantem uma borda dourada estatica suave */
+    @supports not (background: conic-gradient(from var(--angle))) {
+      .glass-card::after {
+        background: none;
+        border: 1px solid rgba(201, 169, 106, 0.25);
+        padding: 0;
+        -webkit-mask: none;
+        mask: none;
+        animation: neonGlow 4s infinite ease-in-out;
+      }
+    }
+
+    /* Reveal Classes */
+    .title-reveal {
+      opacity: 0;
+      filter: blur(10px);
+      transform: translateY(24px);
+    }
+
+    .word-reveal span {
+      display: inline-block;
+      opacity: 0.15;
+      filter: blur(6px);
+      transition: all 0.3s var(--ease-out);
+    }
+
+    /* Manifesto */
+    .manifesto {
+      background-color: var(--bg-surface);
+    }
+
+    .manifesto-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .manifesto-line {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-main);
+      opacity: 0;
+      transform: translateY(20px);
+      filter: blur(8px);
+    }
+
+    .manifesto-line:last-child {
+      color: var(--accent);
+    }
+    
+    .manifesto-line.shine {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      padding-right: 0.1em; /* To prevent clipping italic/glow */
+    }
+    
+    .manifesto-line.shine::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(201, 169, 106, 0.6), transparent);
+      transform: skewX(-20deg);
+    }
+    
+    .shine-animate::after {
+      animation: shineSweep 2.5s ease-in-out infinite;
+    }
+    
+    @keyframes shineSweep {
+      0% { left: -100%; }
+      60%, 100% { left: 200%; }
+    }
+
+    @media (min-width: 768px) {
+      .manifesto-line { font-size: 2.5rem; }
+    }
+
+    /* Form Section */
+    .form-section {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .form-section h2 {
+      font-size: 2.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-section > p {
+      font-size: 1.125rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (min-width: 768px) {
+      .form-section h2 { font-size: 3rem; }
+    }
+
+    .form-group {
+      margin-bottom: 2rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr 2fr;
+      }
+    }
+
+    label.field-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--line);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      padding: 0.75rem 0;
+      transition: border-color 0.3s ease;
+      outline: none;
+      border-radius: 0;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      border-bottom-color: var(--accent);
+    }
+    
+    input::placeholder {
+      color: #4A4A52;
+    }
+
+    /* Pill Buttons (Radio alternatives) */
+    .pill-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .pill-label {
+      position: relative;
+      cursor: pointer;
+      display: block;
+    }
+
+    .pill-label input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .pill-text {
+      display: block;
+      padding: 1rem 1.25rem;
+      background-color: transparent;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--text-sec);
+      font-size: 0.9375rem;
+      transition: all 0.3s var(--ease-out);
+      text-align: left;
+    }
+
+    .pill-label:hover .pill-text {
+      border-color: rgba(245, 242, 236, 0.2);
+      color: var(--text-main);
+    }
+
+    .pill-label input[type="radio"]:checked + .pill-text {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg-base);
+      font-weight: 500;
+    }
+    
+    .pill-label input[type="radio"]:focus-visible + .pill-text {
+      outline: 2px solid var(--text-main);
+      outline-offset: 2px;
+    }
+
+    /* Form Validation Error State */
+    .has-error input[type="text"],
+    .has-error input[type="number"],
+    .has-error .pill-text {
+      border-color: var(--error) !important;
+    }
+    
+    .error-message {
+      color: var(--error);
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+    
+    .has-error .error-message {
+      display: block;
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      background-color: var(--text-main);
+      color: var(--bg-base);
+      border: none;
+      padding: 1.25rem;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: all 0.4s var(--ease-out);
+      position: relative;
+      overflow: hidden;
+      animation: subtlePulse 3s infinite;
+    }
+
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(201, 169, 106, 0.4) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+    
+    /* Pulse effect */
+    @keyframes subtlePulse {
+      0% { box-shadow: 0 0 0 0 rgba(201, 169, 106, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(201, 169, 106, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(201, 169, 106, 0); }
+    }
+
+    @media (min-width: 768px) {
+      .btn-submit:hover {
+        background-color: var(--accent);
+        transform: scale(0.98);
+      }
+      .btn-submit:hover::after {
+        opacity: 1;
+      }
+    }
+    
+    .btn-submit:active {
+      transform: scale(0.96);
+    }
+    
+    .btn-submit:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Success Overlay */
+    .success-overlay {
+      display: none;
+      text-align: center;
+      padding: 4rem 0;
+      animation: fadeIn 0.8s ease forwards;
+    }
+    
+    .success-overlay p {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--accent);
+      margin: 0;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Footer */
+    footer {
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+
+    footer p, footer a {
+      font-size: 0.875rem;
+      color: var(--text-sec);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--text-main);
+    }
+
+    /* GSAP Reveal Classes */
+    .reveal {
+      opacity: 0;
+      visibility: hidden;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated Ambient Background -->
+  <div class="ambient-bg">
+    <div class="ambient-grid"></div>
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+  </div>
+
+  <!-- Film Grain Overlay -->
+  <div class="grain"></div>
+
+  <!-- Scroll Progress -->
+  <div id="scroll-progress"></div>
+
+  <!-- Preloader -->
+  <div id="preloader">
+    <div class="preloader-name">RAMON NETO</div>
+    <div class="preloader-line"></div>
+  </div>
+
+  <!-- 1. Hero -->
+  <header class="hero" id="hero">
+    <div class="hero-bg">
+      <img id="img-hero" src="" alt="Ramon Neto" />
+    </div>
+    <div class="hero-gradient"></div>
+    
+    <div class="container hero-content">
+      <span class="kicker">@ramonnetomkt</span>
+      <h1>
+        <span class="hero-line"><span class="hero-line-inner">Medicina por propósito.</span></span>
+        <span class="hero-line"><span class="hero-line-inner">Digital por liberdade.</span></span>
+      </h1>
+      <p class="hero-sub">Quase médico. Empreendedor digital há 3 anos. Sem fórmula mágica.</p>
+    </div>
+    
+    <div class="scroll-indicator"></div>
+  </header>
+
+  <!-- Divider -->
+  <div class="divider-wrapper"><div class="divider"></div></div>
+
+  <!-- 2. Quem sou eu -->
+  <section class="section-padding" id="about">
+    <div class="container text-section reveal glass-card">
+      <span class="kicker">Quem sou eu</span>
+      <h2 class="title-reveal">Prazer, eu sou o Ramon.</h2>
+      <p>Estou a poucos meses de me tornar médico e, há três anos, construo minha liberdade dentro da internet. Eu não vim te prometer dinheiro fácil, nem carro do ano em 30 dias. Vim te mostrar o caminho real: o mesmo que eu trilho todos os dias, conciliando a medicina com o digital. É difícil. Mas é possível. E se eu consegui, começando do absoluto zero, você também pode dar o seu primeiro passo.</p>
+    </div>
+  </section>
+
+  <div class="divider-wrapper"><div class="divider"></div></div>
+
+  <!-- 3. Propósito (Medicina) -->
+  <section class="section-padding premium-text-section" id="proposito">
+    <div class="giant-bg-text-wrapper"><div class="giant-bg-text">PROPÓSITO</div></div>
+    <div class="container text-section text-center reveal">
+      <div class="golden-hairline"></div>
+      <span class="kicker">Propósito</span>
+      <h2 class="display-heading word-reveal">A medicina me ensina o que nenhum curso ensina.</h2>
+      <p>Responsabilidade. Quando você cuida de uma vida, não existe atalho, não existe promessa vazia, não existe achismo. Existe método, estudo e verdade. Eu trouxe exatamente essa mentalidade para dentro do digital. Por isso você nunca vai me ver vendendo ilusão. Só o que funciona, do jeito honesto.</p>
+    </div>
+  </section>
+
+  <div class="divider-wrapper"><div class="divider"></div></div>
+
+  <!-- 4. Liberdade (Digital) -->
+  <section class="section-padding" id="liberdade">
+    <div class="container split-section reverse">
+      <div class="split-text reveal">
+        <span class="kicker">Liberdade</span>
+        <h2 class="title-reveal">Enquanto estudava, descobri outra saída.</h2>
+        <p>Descobri que dava para construir liberdade sem depender de sorte, sem herança e sem esperar a formatura. Aprendi vendas, prospecção e tráfego na prática, errando e corrigindo. Hoje eu trabalho de onde eu quiser, no meu tempo. Essa é a liberdade que a maioria ainda não tem. E é exatamente ela que eu quero te ajudar a construir, do zero, do jeito certo.</p>
+      </div>
+      <div class="img-reveal-wrapper">
+        <img id="img-digital" src="" class="parallax-img" alt="Liberdade Digital" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Marquee Transition -->
+  <section class="marquee-section">
+    <div class="marquee-content">
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+
+      <!-- Duplicado para loop infinito -->
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+      <div class="marquee-item">É difícil, mas é possível <span>●</span></div>
+      <div class="marquee-item">@ramonnetomkt <span>●</span></div>
+    </div>
+  </section>
+
+  <!-- 6. Manifesto -->
+  <section class="section-padding manifesto" id="manifesto">
+    <div class="container text-section glass-card reveal">
+      <span class="kicker reveal">No que eu acredito</span>
+      <div class="manifesto-lines">
+        <div class="manifesto-line">Odeio promessa de dinheiro fácil.</div>
+        <div class="manifesto-line">Odeio guru que vende sonho e entrega frustração.</div>
+        <div class="manifesto-line">Aqui é o oposto disso.</div>
+        <div class="manifesto-line">É difícil. Mas é possível.</div>
+        <div class="manifesto-line shine">E o primeiro passo começa agora.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Formulário -->
+  <section class="section-padding" id="cadastro">
+    <div class="container form-section reveal glass-card">
+      <span class="kicker">Acesso antecipado</span>
+      <h2 class="title-reveal">Isto não é para todo mundo.</h2>
+      <p>Estou construindo algo que vai pegar na mão de quem está começando do zero e levar até a primeira venda. As primeiras vagas vão para quem preencher os dados abaixo com honestidade. Responda e entre para a lista dos primeiros.</p>
+      
+      <div id="form-container">
+        <form id="waitlist-form" novalidate>
+          
+          <div class="form-group" id="group-nome">
+            <label class="field-label" for="nome">Nome completo</label>
+            <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required>
+            <div class="error-message">Campo obrigatório.</div>
+          </div>
+          
+          <div class="form-group" id="group-instagram">
+            <label class="field-label" for="instagram">@ do seu Instagram</label>
+            <input type="text" id="instagram" name="instagram" placeholder="@seuusuario" required>
+            <div class="error-message">Campo obrigatório.</div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group" id="group-idade">
+              <label class="field-label" for="idade">Idade</label>
+              <input type="number" id="idade" name="idade" placeholder="Ex: 25" required>
+              <div class="error-message">Informe sua idade.</div>
+            </div>
+            <div class="form-group" id="group-cidade">
+              <label class="field-label" for="cidade">Cidade / Estado</label>
+              <input type="text" id="cidade" name="cidade" placeholder="Ex: São Paulo / SP" required>
+              <div class="error-message">Campo obrigatório.</div>
+            </div>
+          </div>
+          
+          <div class="form-group" id="group-momento">
+            <label class="field-label">Em qual momento da jornada digital você está hoje?</label>
+            <div class="pill-group">
+              <label class="pill-label">
+                <input type="radio" name="momento" value="Começando do zero absoluto" required>
+                <span class="pill-text">Começando do zero absoluto</span>
+              </label>
+              <label class="pill-label">
+                <input type="radio" name="momento" value="Tentando minhas primeiras vendas (X1 ou orgânico)">
+                <span class="pill-text">Tentando minhas primeiras vendas (X1 ou orgânico)</span>
+              </label>
+              <label class="pill-label">
+                <input type="radio" name="momento" value="Já presto serviço ou rodo tráfego, quero escalar">
+                <span class="pill-text">Já presto serviço ou rodo tráfego, quero escalar</span>
+              </label>
+              <label class="pill-label">
+                <input type="radio" name="momento" value="Operação avançada (tráfego direto, COD, escala)">
+                <span class="pill-text">Operação avançada (tráfego direto, COD, escala)</span>
+              </label>
+            </div>
+            <div class="error-message">Selecione uma opção.</div>
+          </div>
+          
+          <div class="form-group" id="group-investimento">
+            <label class="field-label">Quanto você tem disponível HOJE para investir na sua operação?</label>
+            <div class="pill-group">
+              <label class="pill-label">
+                <input type="radio" name="investimento" value="Menos de R$ 1.000" required>
+                <span class="pill-text">Menos de R$ 1.000</span>
+              </label>
+              <label class="pill-label">
+                <input type="radio" name="investimento" value="R$ 1.000 a R$ 5.000">
+                <span class="pill-text">R$ 1.000 a R$ 5.000</span>
+              </label>
+              <label class="pill-label">
+                <input type="radio" name="investimento" value="R$ 5.000 a R$ 10.000">
+                <span class="pill-text">R$ 5.000 a R$ 10.000</span>
+              </label>
+              <label class="pill-label">
+                <input type="radio" name="investimento" value="Mais de R$ 10.000">
+                <span class="pill-text">Mais de R$ 10.000</span>
+              </label>
+            </div>
+            <div class="error-message">Selecione uma opção.</div>
+          </div>
+          
+          <button type="submit" class="btn-submit" id="submit-btn">Quero garantir minha vaga</button>
+          
+          <div id="form-error-global" class="error-message" style="text-align: center; margin-top: 1rem; font-size: 0.875rem;">
+            Ocorreu um erro ao enviar. Por favor, tente novamente.
+          </div>
+        </form>
+      </div>
+      
+      <div id="success-state" class="success-overlay">
+        <p>Você está dentro. Em breve, você vai ser um dos primeiros a saber.</p>
+      </div>
+      
+    </div>
+  </section>
+
+  <!-- 8. Rodapé -->
+  <footer>
+    <div class="divider-wrapper"><div class="divider"></div></div>
+    <div class="footer-content">
+      <p>Ramon Neto</p>
+      <a href="https://instagram.com/ramonnetomkt" target="_blank" rel="noopener noreferrer">@ramonnetomkt</a>
+      <p id="current-year"></p>
+    </div>
+  </footer>
+
+  <!-- Lenis CDN -->
+  <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+  <!-- GSAP CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <script>
+    /* =====================================================================
+       CONFIGURAÇÕES PRINCIPAIS - EDITE AQUI
+       ===================================================================== */
+    const CONFIG = {
+      // URL para onde os dados do formulário serão enviados via POST (Formspree, Make, n8n, etc)
+      FORM_ENDPOINT: "https://formspree.io/f/xgogegjj",
+      
+      // URLs das fotos
+      FOTO_HERO: "https://i.ibb.co/Kcv0LQP9/medicina.jpg", 
+      FOTO_DIGITAL: "https://i.ibb.co/jZbdYVXL/hero.jpg"
+    };
+
+    /* =====================================================================
+       INICIALIZAÇÃO E LÓGICA DA PÁGINA
+       ===================================================================== */
+    
+    // Set current year
+    document.getElementById('current-year').innerText = `© ${new Date().getFullYear()}`;
+
+    // Load Images from CONFIG
+    document.getElementById('img-hero').src = CONFIG.FOTO_HERO;
+    document.getElementById('img-digital').src = CONFIG.FOTO_DIGITAL;
+
+    // Register ScrollTrigger
+    gsap.registerPlugin(ScrollTrigger);
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Split text for word-reveal
+    document.querySelectorAll('.word-reveal').forEach(el => {
+      const words = el.innerText.split(' ');
+      el.innerHTML = '';
+      words.forEach(word => {
+        const span = document.createElement('span');
+        span.innerText = word + ' ';
+        el.appendChild(span);
+      });
+    });
+
+    // Setup Magnetic Button
+    const btnSubmit = document.getElementById('submit-btn');
+    btnSubmit.addEventListener('mousemove', (e) => {
+      if (window.innerWidth >= 768) {
+        const rect = btnSubmit.getBoundingClientRect();
+        const x = (e.clientX - rect.left) - rect.width / 2;
+        const y = (e.clientY - rect.top) - rect.height / 2;
+        gsap.to(btnSubmit, {
+          x: x * 0.2,
+          y: y * 0.2,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+      }
+    });
+    btnSubmit.addEventListener('mouseleave', () => {
+      if (window.innerWidth >= 768) {
+        gsap.to(btnSubmit, {
+          x: 0,
+          y: 0,
+          duration: 0.5,
+          ease: 'elastic.out(1, 0.3)'
+        });
+      }
+    });
+
+    // Animation Logic
+    function initAnimations() {
+      if (prefersReducedMotion) {
+        // Fallback for reduced motion
+        document.getElementById('preloader').style.display = 'none';
+        gsap.set('.reveal, .hero-line-inner, .hero-sub, .kicker, .manifesto-line, .title-reveal', { autoAlpha: 1, y: 0, filter: 'blur(0px)', visibility: 'visible' });
+        gsap.set('.divider', { scaleX: 1 });
+        gsap.set('.img-reveal-wrapper', { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' });
+        gsap.set('.word-reveal span', { opacity: 1, filter: 'blur(0px)' });
+        gsap.set('#scroll-progress', { width: '100%' });
+        gsap.set('.glass-card', { autoAlpha: 1, visibility: 'visible' });
+        return;
+      }
+
+      // Initialize Lenis
+      const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smooth: true,
+      });
+
+      function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
+
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add((time)=>{
+        lenis.raf(time * 1000);
+      });
+      gsap.ticker.lagSmoothing(0, 0);
+
+      // Scroll Progress Bar (corrigido: rastreia a rolagem da pagina inteira)
+      gsap.to('#scroll-progress', {
+        width: '100%',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: document.body,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.3
+        }
+      });
+
+      // Preloader Timeline
+      const tlPreloader = gsap.timeline();
+      
+      tlPreloader
+        .to('.preloader-name', { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' })
+        .to('.preloader-line', { width: '120px', autoAlpha: 1, duration: 0.4, ease: 'power2.out' }, "-=0.2")
+        .to('#preloader', { yPercent: -100, duration: 0.8, ease: 'power3.inOut', delay: 0.3 })
+        .call(initScrollAnimations);
+
+      function initScrollAnimations() {
+        // Hero Entrance
+        const tlHero = gsap.timeline();
+        tlHero
+          .to('.hero .kicker', { autoAlpha: 1, duration: 0.6, ease: 'power2.out' })
+          .to('.hero-line-inner', { 
+            y: 0, 
+            duration: 0.8, 
+            stagger: 0.06, 
+            ease: 'power3.out',
+            letterSpacing: '-0.02em' 
+          }, "-=0.4")
+          .to('.hero-sub', { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out' }, "-=0.4");
+          
+        // Ken Burns effect for Hero background (loop continuo)
+        gsap.fromTo('.hero-bg img', 
+          { scale: 1 },
+          { scale: 1.08, duration: 20, ease: 'sine.inOut', yoyo: true, repeat: -1, transformOrigin: 'center center' }
+        );
+
+        // Hero Parallax on Scroll
+        gsap.to('.hero-bg', {
+          yPercent: 30,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '.hero',
+            start: 'top top',
+            end: 'bottom top',
+            scrub: true
+          }
+        });
+
+        // Standard Reveals
+        gsap.utils.toArray('.reveal').forEach(el => {
+          gsap.fromTo(el, 
+            { autoAlpha: 0, y: 24 },
+            { 
+              scrollTrigger: {
+                trigger: el,
+                start: "top 85%",
+              },
+              autoAlpha: 1, 
+              y: 0, 
+              duration: 0.8, 
+              ease: 'power2.out' 
+            }
+          );
+        });
+        
+        // Title Reveals
+        gsap.utils.toArray('.title-reveal').forEach(title => {
+          gsap.to(title, {
+            scrollTrigger: {
+              trigger: title,
+              start: "top 85%",
+            },
+            autoAlpha: 1, 
+            y: 0, 
+            filter: 'blur(0px)',
+            duration: 0.8, 
+            ease: 'power2.out' 
+          });
+        });
+
+        // Word Reveals (Propósito)
+        gsap.utils.toArray('.word-reveal').forEach(el => {
+          gsap.to(el.querySelectorAll('span'), {
+            scrollTrigger: {
+              trigger: el,
+              start: "top 85%",
+            },
+            opacity: 1,
+            filter: 'blur(0px)',
+            duration: 0.8,
+            stagger: 0.1,
+            ease: 'power2.out'
+          });
+        });
+
+        // Dividers
+        gsap.utils.toArray('.divider').forEach(line => {
+          gsap.to(line, {
+            scrollTrigger: {
+              trigger: line,
+              start: "top 90%",
+            },
+            scaleX: 1,
+            duration: 1,
+            ease: 'power3.out'
+          });
+        });
+        
+        // Image Reveal (Curtain)
+        gsap.utils.toArray('.img-reveal-wrapper').forEach(wrapper => {
+          gsap.to(wrapper, {
+            scrollTrigger: {
+              trigger: wrapper,
+              start: "top 85%",
+            },
+            clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
+            duration: 1.2,
+            ease: 'power3.inOut'
+          });
+        });
+
+        // Parallax Images (mais leve e suave para nao travar)
+        gsap.utils.toArray('.parallax-img').forEach(img => {
+          gsap.fromTo(img,
+            { yPercent: -6 },
+            {
+              yPercent: 6,
+              ease: "none",
+              scrollTrigger: {
+                trigger: img.parentElement,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 1
+              }
+            }
+          );
+        });
+
+        // Manifesto Lines
+        gsap.utils.toArray('.manifesto-line').forEach((line, i) => {
+          gsap.to(line, {
+            scrollTrigger: {
+              trigger: '.manifesto-lines',
+              start: "top 80%",
+            },
+            autoAlpha: 1,
+            y: 0,
+            filter: 'blur(0px)',
+            duration: 0.8,
+            delay: i * 0.15,
+            ease: 'power2.out',
+            onComplete: () => {
+              if(line.classList.contains('shine')) {
+                line.classList.add('shine-animate');
+              }
+            }
+          });
+        });
+
+        // Recalcula posicoes apos tudo carregar
+        ScrollTrigger.refresh();
+      }
+    }
+
+    // Start animations on load
+    window.addEventListener('load', initAnimations);
+
+    /* =====================================================================
+       LÓGICA DO FORMULÁRIO E VALIDAÇÃO
+       ===================================================================== */
+    
+    const form = document.getElementById('waitlist-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const formContainer = document.getElementById('form-container');
+    const successState = document.getElementById('success-state');
+    const globalError = document.getElementById('form-error-global');
+
+    // Remove error state on input
+    form.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', () => {
+        const group = input.closest('.form-group');
+        if (group) group.classList.remove('has-error');
+      });
+      
+      // For radio buttons
+      if(input.type === 'radio') {
+        input.addEventListener('change', () => {
+          const group = input.closest('.form-group');
+          if (group) group.classList.remove('has-error');
+        });
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      globalError.style.display = 'none';
+      let isValid = true;
+      const data = {};
+
+      // Check text/number inputs
+      form.querySelectorAll('input[type="text"][required], input[type="number"][required]').forEach(input => {
+        if (!input.value.trim()) {
+          input.closest('.form-group').classList.add('has-error');
+          isValid = false;
+        } else {
+          data[input.name] = input.value.trim();
+        }
+      });
+
+      // Check radio groups
+      const radioGroups = ['momento', 'investimento'];
+      radioGroups.forEach(groupName => {
+        const checked = form.querySelector(`input[name="${groupName}"]:checked`);
+        if (!checked) {
+          document.getElementById(`group-${groupName}`).classList.add('has-error');
+          isValid = false;
+        } else {
+          data[groupName] = checked.value;
+        }
+      });
+
+      if (!isValid) return;
+
+      // Loading state
+      const originalText = submitBtn.innerText;
+      submitBtn.innerText = 'Enviando...';
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch(CONFIG.FORM_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          formContainer.style.display = 'none';
+          successState.style.display = 'block';
+        } else {
+          throw new Error('Server returned error');
+        }
+      } catch (error) {
+        console.error('Submission error:', error);
+        globalError.style.display = 'block';
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+      }
+    });
+
+  </script>
+</body>
+</html>
